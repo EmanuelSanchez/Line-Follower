@@ -9,7 +9,7 @@ def construc_image(example):
 
 	img_pix[:,:,0] = ex
 	img_pix[:,:,1] = ex
-	img_pix[:,:,1] = ex
+	img_pix[:,:,2] = ex
 
 	img = np.zeros((7,7,3), np.uint8)
 
@@ -22,6 +22,7 @@ def construc_image(example):
 	return img_pix, img_original, img
 
 def hough_line(img):
+  print(img)
   # Rho and Theta ranges
   thetas = np.deg2rad(np.arange(-90.0, 90.0))
   width, height = img.shape
@@ -47,7 +48,12 @@ def hough_line(img):
       rho = round(x * cos_t[t_idx] + y * sin_t[t_idx]) + diag_len
       accumulator[rho, t_idx] += 1
 
-  return accumulator, thetas, rhos
+  # Easiest peak finding based on max votes
+  idx = np.argmax(accumulator)
+  rho = round(rhos[idx / accumulator.shape[1]])-1
+  theta = thetas[idx % accumulator.shape[1]]
+  
+  return theta, rho
 
 def draw_lineDetected(img, m, b):
 	#print(m, b)
@@ -63,7 +69,40 @@ def draw_lineDetected(img, m, b):
 
 	return img
 
-img_pix, img_original, img = construc_image(ex11)
+def line_centre_calc(theta):
+	centre_x = rho*np.cos(theta)
+	centre_y = rho*np.sin(theta)
+	return centre_x, centre_y
+
+def line_ecuation_calc(theta, rho):
+	m = round(-1*np.cos(theta)/np.sin(theta))
+	b = round(rho/np.sin(theta))
+	print('y = ',m,'x + ',b)
+	return m, b
+
+def line_aproximation(img_centre, theta, centre_x, m, b):
+	if theta == -90 or theta == 90:
+		print('Horizontal')
+	elif -5 < theta and theta < 5:
+		print('Vertical')
+		print ('Offset = %.0f' % (centre_x-3))
+	elif theta > 5:
+		print('Right')
+		draw_lineDetected(img_centre, m, b)
+		print ('Degrees = %.0f' % (90-np.degrees(np.arctan(abs(m)))))
+		print ('Offset = %.0f' % (centre_x-3))
+	elif theta < -5:
+		print('Left')
+		draw_lineDetected(img_centre, m ,b)
+		print ('Degrees = %.0f' % (90-np.degrees(np.arctan(abs(m)))))
+		print ('Offset = %.0f' % (centre_x-3))
+	else:
+		raise SystemExit('Error: Dirreción no conocida (Right, Left, Horizontal, Vertical')
+
+img_original = cv2.imread('prueba4.png')
+img_pix = cv2.imread('prueba4.png')
+img = cv2.imread('prueba4.png')
+#img_pix, img_original, img = construc_image(ex11)
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 ret,img_th = cv2.threshold(img_gray,120,255,cv2.THRESH_BINARY)
 
@@ -71,40 +110,17 @@ ret,img_th = cv2.threshold(img_gray,120,255,cv2.THRESH_BINARY)
 #image = np.zeros((7,7))
 #image[:7, :7] = np.eye(7)
 
-accumulator, thetas, rhos = hough_line(img_th)
+theta, rho = hough_line(img_th)
 
-# Easiest peak finding based on max votes
-idx = np.argmax(accumulator)
-rho = round(rhos[idx / accumulator.shape[1]])-1
-theta = thetas[idx % accumulator.shape[1]]
+centre_x, centre_y = line_centre_calc(theta)
 
-m = round(-1*np.cos(theta)/np.sin(theta))
-b = round(rho/np.sin(theta))
-
-centre_x = rho*np.cos(theta)
-centre_y = rho*np.sin(theta)
+m, b = line_ecuation_calc(theta, rho)
 
 img_centre = cv2.cvtColor(img_th, cv2.COLOR_GRAY2BGR)
 
 theta = int(np.rad2deg(theta))
 
-if theta == -90 or theta == 90:
-	print('Horizontal')
-elif -5 < theta and theta < 5:
-	print('Vertical')
-	print ('Offset = %.0f' % (centre_x-3))
-elif theta > 5:
-	print('Right')
-	draw_lineDetected(img_centre, m, b)
-	print ('Degrees = %.0f' % np.degrees(np.arctan(abs(m))))
-	print ('Offset = %.0f' % (centre_x-3))
-elif theta < -5:
-	print('Left')
-	draw_lineDetected(img_centre, m ,b)
-	print ('Degrees = %.0f' % np.degrees(np.arctan(abs(m))))
-	print ('Offset = %.0f' % (centre_x-3))
-else:
-	raise SystemExit('Error: Dirreción no conocida (Right, Left, Horizontal, Vertical')
+line_aproximation(img_centre, theta, centre_x, m, b)
 
 img_centre[round(centre_y)][round(centre_x)]= [0,255,0]
 
