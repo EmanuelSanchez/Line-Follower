@@ -4,7 +4,7 @@
  *
  */
 
-#define pwm_velocity 64
+#define pwm_velocity 125
 
 // Pins Definitions
 //Motors:
@@ -49,10 +49,6 @@ void setup() {
 
 void loop() {
   
-  Serial.println(digitalRead(encoderR_A));
-  //Serial.println(analogRead(encoderL_B));
-  //Serial.println(analogRead(encoderR_A));
-  //Serial.println(analogRead(encoderR_B));
 
 
 }
