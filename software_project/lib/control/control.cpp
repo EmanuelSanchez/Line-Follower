@@ -25,9 +25,9 @@
 #define kdR 1
 
 // constans to track line control
-#define kpT 0.5
-#define kiT 0.3
-#define kdT 0.2
+#define kpT 40
+#define kiT 0
+#define kdT 0
 
 #define pi 3,1416
 #define line_reference 3  // line is array of 7 sensors, the middle is the Reference (3)
