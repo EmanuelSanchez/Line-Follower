@@ -20,7 +20,7 @@ const int motorL_phase = 2;   // blue wire
 const int motorR_en = 4;      // violet wire
 const int motorR_phase = 5;   // blue wire
 
-const int default_velocity = 60;
+const int default_velocity = 105;
 const int max_velocity = 255;
 
 void setLeftVelocity(uint8_t _pwm_velocity){

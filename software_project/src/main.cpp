@@ -16,6 +16,9 @@ void setup () {
   Serial.begin(115200);
   matrixSensorInit();
   motorsInit();   // Default speed = 125
+  delay(3000);
+  setLeftVelocity(0);
+  setRightVelocity(0);
 }
 
 void loop () {

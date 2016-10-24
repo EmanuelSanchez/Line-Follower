@@ -25,9 +25,9 @@
 #define kdR 1
 
 // constans to track line control
-#define kpT 0.5
-#define kiT 0.3
-#define kdT 0.2
+#define kpT 30
+#define kiT 0
+#define kdT 0
 
 #define pi 3,1416
 #define line_reference 3  // line is array of 7 sensors, the middle is the Reference (3)
@@ -94,13 +94,16 @@ void pid_tracking_line () {
       error_now=i-line_reference;    // line is array of 7 sensors, the middle is the Reference (3)
     }
   }
+//  Serial.print("Error");
+//  Serial.println(error_now);
 
   error_dif = error_now - track_error_last;
   track_error_suma += error_now;
   track_error_last = error_now;
 
   track_output_signal = (kpT * error_now) + (kiT * track_error_suma) + (kdT * error_dif);
-  Serial.println(track_output_signal);
+//  Serial.print("Signal");
+//  Serial.println(track_output_signal);
 }
 
 void controlLoop(){
@@ -112,19 +115,32 @@ void controlLoop(){
   else if(track_output_signal < -max_output_signal){
     track_output_signal = -max_output_signal;
   }
+//  Serial.print("Final Signal: \t");
+//  Serial.println(track_output_signal);
 
-  Serial.println(track_output_signal);
-
-  if(track_output_signal<0){
-    setLeftVelocity(default_velocity-track_output_signal);
-    setRightVelocity(default_velocity+track_output_signal);
-  }
-  else if (track_output_signal>0){
+  if(track_output_signal<0){      // line at left side
     setLeftVelocity(default_velocity+track_output_signal);
     setRightVelocity(default_velocity-track_output_signal);
+/*    Serial.println("left side");
+    Serial.print("Leff: \t");
+    Serial.println(default_velocity+track_output_signal);
+    Serial.print("Right: \t");
+    Serial.println(default_velocity-track_output_signal);
+    delay(1000);*/
   }
-  else{
-    setLeftVelocity(max_velocity);
-    setRightVelocity(max_velocity);
+  else if (track_output_signal>0){    // line at rith side
+    setLeftVelocity(default_velocity+track_output_signal);
+    setRightVelocity(default_velocity-track_output_signal);
+/*    Serial.println("right side");
+    Serial.print("Leff: \t");
+    Serial.println(default_velocity+track_output_signal);
+    Serial.print("Right: \t");
+    Serial.println(default_velocity-track_output_signal);
+    delay(1000);*/
   }
+  else{     // line at the middle
+    setLeftVelocity(default_velocity);
+    setRightVelocity(default_velocity);
+  }
+  //delay(500);
 }
