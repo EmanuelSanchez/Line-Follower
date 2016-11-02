@@ -34,7 +34,7 @@ void count_R(){
   tick_R++;
 }
 
-void encodersINIT() {
+void encodersInit() {
 
   pinMode(encoderL_A, INPUT);
   pinMode(encoderL_B, INPUT);
