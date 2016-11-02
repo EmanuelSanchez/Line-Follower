@@ -31,7 +31,7 @@
 
 #define pi 3,1416
 #define line_reference 3  // line is array of 7 sensors, the middle is the Reference (3)
-#define max_output_signal 125 // the signal control can't exceed the max speed (255), natural speed + signal control <= max speed
+#define max_output_signal 175 // the signal control can't exceed the max speed (255), natural speed + signal control <= max speed
 
 //left motor
 float left_error_last = 0;      // last error
@@ -92,6 +92,9 @@ void pid_tracking_line () {
   for(int i=0; i<7; i++){
     if(line[i]){
       error_now=i-line_reference;    // line is array of 7 sensors, the middle is the Reference (3)
+      //Serial.print("A");
+      //Serial.print(i);
+      //Serial.println("B");
     }
   }
 
@@ -100,7 +103,7 @@ void pid_tracking_line () {
   track_error_last = error_now;
 
   track_output_signal = (kpT * error_now) + (kiT * track_error_suma) + (kdT * error_dif);
-  Serial.println(track_output_signal);
+  //Serial.println(track_output_signal);
 }
 
 void controlLoop(){
@@ -116,15 +119,15 @@ void controlLoop(){
   Serial.println(track_output_signal);
 
   if(track_output_signal<0){
-    setLeftVelocity(default_velocity-track_output_signal);
-    setRightVelocity(default_velocity+track_output_signal);
+    setLeftVelocity(default_velocity+track_output_signal);
+    setRightVelocity(default_velocity-track_output_signal);
   }
   else if (track_output_signal>0){
     setLeftVelocity(default_velocity+track_output_signal);
     setRightVelocity(default_velocity-track_output_signal);
   }
   else{
-    setLeftVelocity(max_velocity);
-    setRightVelocity(max_velocity);
+    setLeftVelocity(default_velocity);
+    setRightVelocity(default_velocity);
   }
 }

@@ -20,8 +20,8 @@ const int motorL_phase = 2;   // blue wire
 const int motorR_en = 4;      // violet wire
 const int motorR_phase = 5;   // blue wire
 
-const int default_velocity = 60;
-const int max_velocity = 255;
+const int default_velocity = 50;
+const int max_velocity = 200;
 
 void setLeftVelocity(uint8_t _pwm_velocity){
   analogWrite(motorL_en, _pwm_velocity);
@@ -42,9 +42,6 @@ void motorsInit () {
   //motors: direction
   digitalWrite(motorL_phase, HIGH);
   digitalWrite(motorR_phase, HIGH);
-
-  //wait 2 seconds
-  delay(2000);
 
   //motors: set velocity
   setLeftVelocity(default_velocity);

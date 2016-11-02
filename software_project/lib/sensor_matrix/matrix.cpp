@@ -197,10 +197,25 @@ void print_first_line(){
   Serial.print("\n");
 }
 
+void send_matrix(){
+
+  // Print Result of all matrix
+  Serial.print("begin\n");
+  for(int i=0; i<7; i++){
+    for(int j=0; j<7; j++){
+        Serial.print(Matrix_Result[i][j]);
+        Serial.print(",");
+    }
+    Serial.print("\n");
+  }
+  Serial.print("\n");
+
+}
+
 void print_matrix(){
 
   // Print Result of all matrix
-  Serial.println("Matrix");
+  Serial.println("begin");
   for(int i=0; i<7; i++){
     for(int j=0; j<7; j++){
 
