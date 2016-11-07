@@ -2,5 +2,5 @@
 
 */
 
-#define default_velocity 30000
+#define default_velocity 12000
 #define max_velocity 65535

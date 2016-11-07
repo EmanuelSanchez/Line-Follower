@@ -45,6 +45,8 @@ uint8_t Matrix_Result[][7] = {{0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0},
 bool line[] = {0,0,0,0,0,0,0};
 bool Bool_Matrix[][7] = {{0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}, {0,0,0,0,0,0,0}};
 
+float center_mass;  //matrix center of mass
+
 /************************  Conversion from ADC  ************************/
 
 void conversion(const int chip){
@@ -206,6 +208,7 @@ void print_bool_matrix(){
     }
   Serial.println();
   }
+  delay(200);
 }
 
 void print_first_line(){
@@ -262,6 +265,7 @@ void matrixSensorInit() {
 
   // initialize SPI and Serial:
   SPI.begin();
+  //getMatrixLinearIndex();
 
 }
 
@@ -310,19 +314,19 @@ float getLineCenterofMassAnalog(int line){
 }
 
 float getMatrixCenterMass(void){
-  float center_mass;
   float weights;
   weights = 0;
   center_mass = 0;
   for(int j=0; j<7; j++){
     for(int i=0; i<7; i++){
-      weights = Bool_Matrix[j][i];
-      center_mass = Bool_Matrix[j][i]*(i-3);
+      weights += Bool_Matrix[j][i];
+      center_mass += Bool_Matrix[j][i]*(i-3);
     }
+    Serial.print("\n");
   }
   center_mass = center_mass/weights;
-  Serial.print("\nCenter: ");
-  Serial.print(center_mass);
+  // Serial.print("\nCenter: ");
+  // Serial.print(center_mass);
   return center_mass;
 }
 
@@ -349,4 +353,14 @@ float getLineCenterofMassBool(int line){
   }
   center = center/weights;
   return center;
+}
+
+float getCenterMass(){
+  return center_mass;
+}
+
+float verifyline(){
+  if(!(Bool_Matrix[0][3] | Bool_Matrix[1][3] | Bool_Matrix[2][3])){
+    return 1;
+  }
 }

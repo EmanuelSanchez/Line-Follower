@@ -16,13 +16,40 @@
 IntervalTimer controllerTimer;
 #define interruptTiming 1000 //1000 -> 1ms
 
+// Stuffs added to implement the message
+//----------------------------------------------
+IntervalTimer controllerMessage;
+#define interruptMessage 20000 //20000 -> 20ms
+volatile int stateMachine = 0;
+volatile int detectedMessage = 0; // -1 is Left, +1 is Right
+const float MessageGain = 3;
+
+// Interrupt Timer to active and desactive the bifurcation detection
+IntervalTimer controlDetectMessage;
+#define detectMessageOFFTiming 3000000  // 3 s
+//----------------------------------------------
+
+// timer to control if the is not reading
+IntervalTimer nothingInMatrix;
+#define timerInNothing 500000
+
+// Global Matrix Variable
+extern bool Bool_Matrix[][7];
+
 // Movile Constants
 #define r 1.72  //wheel radius
 #define L 7.6   //distance between wheels
 
 //Control Variables
+// #define kpW 97000
+// #define kdW 70000
+//
+// #define kpV 250
+// #define kdV 50
+
+// constants to go at 350 (32500)
 #define kpW 90000
-#define kdW 1000
+#define kdW 1500
 
 #define kpV 250
 #define kdV 50
@@ -33,11 +60,9 @@ int32_t  enc_count_left, enc_count_right;
 int32_t  enc_count_left_old, enc_count_right_old;
 float VL, VR, Vmean, Wenc; // mm/s
 
-//left motor
+#define gainCenteroverVelocity 0.5
 double linearSpeed_output;         // control output
 double linearSpeed_setpoint;         // control output
-
-//right motor
 
 double angularSpeed_output;         // control output
 double angularSpeed_setpoint;         // control output
@@ -56,11 +81,21 @@ int32_t rightSpeed;
 void controlInit(void){
   configureEncoderLib();
   controllerTimer.begin(interruptHandler, interruptTiming);
+  controllerMessage.begin(interruptDecode, interruptMessage);
 }
 
 void interruptHandler(void){
   updateEncoderStatus();
+  //setlinearSpeed();
   PD_controller();
+}
+
+void setlinearSpeed(){
+  if(verifyline()){
+    Serial.print("ENTRA");
+    setSetPointW(0);
+    setSetPointV(500);
+  }
 }
 
 void updateEncoderStatus(void){
@@ -90,8 +125,7 @@ void PD_controller () {
 
   //encoderFeedbackW = Wenc;
   encoderFeedbackV = Vmean;
-  Werror_now = angularSpeed_setpoint - 0;
-  //Werror_now = angularSpeed_setpoint - getMatrixCenterMass();
+  Werror_now = angularSpeed_setpoint - getMatrixCenterMass() + (MessageGain)*detectedMessage;
   Verror_now = linearSpeed_setpoint - encoderFeedbackV;
 
   Werror_dif = Werror_now - Werror_old;
@@ -143,7 +177,7 @@ void PD_controller () {
   // Serial.print("\nrightSpeed: ");
   // Serial.print(rightSpeed);
 
-  setLeftVelocity(leftSpeed);
+  setLeftVelocity(0.70*leftSpeed);
   setRightVelocity(rightSpeed);
 }
 
@@ -181,4 +215,62 @@ float getSetPointW(void){
 void setSetPointW(float spw){
 
     angularSpeed_setpoint = spw;
+}
+
+// Use this functions to implement a state machine to detect the
+void interruptDecode(void){
+   bool leftSensor = Bool_Matrix[0][0];
+   bool rightSensor = Bool_Matrix[0][6];
+
+   // First state of the machine, detect black
+   if(stateMachine == 0){
+     Serial.println(leftSensor);
+     Serial.println(rightSensor);
+      if ( leftSensor & rightSensor){
+         stateMachine = 1;
+         Serial.println("Estate 1");
+      }
+   }
+   // Second state, here we detect the white to proceed
+   if (stateMachine ==1){
+      if ( leftSensor & rightSensor){
+         stateMachine = 1;
+      }
+      else if (! (leftSensor | rightSensor)){
+         stateMachine = 2;
+         Serial.println("Estate 2");
+         setSetPointV(0);
+         setSetPointW(0);
+      }
+      else stateMachine = 0;
+   }
+
+   // Third state, detect which side to proceed
+   if (stateMachine ==2){
+      if (! (leftSensor | rightSensor)){
+         stateMachine = 2;
+      }
+      else if (leftSensor){
+         stateMachine = 0;
+         detectedMessage = -1;
+         Serial.println("LEFT");
+         controllerMessage.end();
+         controlDetectMessage.begin(DetecMessageOFfHandler, detectMessageOFFTiming);
+      }
+      else if (rightSensor){
+         stateMachine = 0;
+         detectedMessage = 1;
+         Serial.println("RIGHT");
+         controllerMessage.end();
+         controlDetectMessage.begin(DetecMessageOFfHandler, detectMessageOFFTiming);
+      }
+      //else stateMachine = 0;
+   }
+}
+
+void DetecMessageOFfHandler(){
+  Serial.println("Entra en Apagado");
+  detectedMessage = 0;
+  controllerMessage.begin(interruptDecode, interruptMessage);
+  controlDetectMessage.end();
 }
